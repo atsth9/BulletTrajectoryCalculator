@@ -15,19 +15,7 @@ namespace BulletTrajectoryCalculator.Controllers
             return View();
         }
 
-        public ActionResult About()
-        {
-            ViewBag.Message = "Your app description page.";
-
-            return View();
-        }
-
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
-
-            return View();
-        }
+       
         [HttpPost]
         public ActionResult Calculate(string InputSlantRange, string InputElevationAngle)
         {
@@ -45,9 +33,11 @@ namespace BulletTrajectoryCalculator.Controllers
             //declare and initialize bulletdrop table
             double[,] BulletDropTable = new double[,] { { 0, 100, 200, 300, 400, 500 }, { 1.5, 0, -2.9, -11, -25.2, -46.4 } };
 
-            //parse the strings into numbers
+            //parse the strings into numbers (and validate the data)
             bool check1 = Double.TryParse(InputSlantRange, out SlantRange);
             bool check2 = Double.TryParse(InputElevationAngle, out ElevationAngle);
+            ViewBag.SlantRange = "Slant Range: " + SlantRange;
+            ViewBag.ElevationAngle = "Elevation Angle: " + ElevationAngle;
 
             //calculate equivalent horizontal range 
             double HorizontalRange = SlantRange * Math.Cos(ElevationAngle*.0174532925);
@@ -68,9 +58,10 @@ namespace BulletTrajectoryCalculator.Controllers
             LowRange  = BulletDropTable[0,MaxRangeIndex - 1];
             HighElevation  = BulletDropTable[1,MaxRangeIndex];
             LowElevation = BulletDropTable[1,MaxRangeIndex - 1];
+            //use equation to calculate bullet drop correction in Minutes
             BulletDrop = (HighElevation*(HorizontalRange - LowRange) + LowElevation*(HighRange - HorizontalRange))/(HighRange-LowRange);
-
-            ViewBag.message = "Your angle of correction is: " + ((-((BulletDrop*.01) / HorizontalRange)) );
+           
+            ViewBag.Title = "Your angle of correction is: " + Math.Round(((-((BulletDrop*.01) / HorizontalRange)*(180/Math.PI))*60 ),1) + "'";
             return View();
         }
        
