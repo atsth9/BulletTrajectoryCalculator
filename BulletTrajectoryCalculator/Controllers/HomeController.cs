@@ -20,7 +20,17 @@ namespace BulletTrajectoryCalculator.Controllers
         public ActionResult Calculate(string InputSlantRange, string InputElevationAngle)
         {
             
-            //declare variables
+           
+            ViewBag.Title = "Your angle of correction is: " + GetAngleOfCorrection(InputSlantRange, InputElevationAngle) + "'";
+            return View();
+        }
+
+
+
+        public double GetAngleOfCorrection(string InputSlantRange, string InputElevationAngle)
+        {
+             //declare variables
+            double  angle = 0;
             double SlantRange = 0;
             double ElevationAngle = 0;
             double BulletDrop = 0;
@@ -60,9 +70,8 @@ namespace BulletTrajectoryCalculator.Controllers
             LowElevation = BulletDropTable[1,MaxRangeIndex - 1];
             //use equation to calculate bullet drop correction in Minutes
             BulletDrop = (HighElevation*(HorizontalRange - LowRange) + LowElevation*(HighRange - HorizontalRange))/(HighRange-LowRange);
-           
-            ViewBag.Title = "Your angle of correction is: " + Math.Round(((-((BulletDrop*.01) / HorizontalRange)*(180/Math.PI))*60 ),1) + "'";
-            return View();
+            angle = Math.Round(((-((BulletDrop * .01) / HorizontalRange) * (180 / Math.PI)) * 60), 1);
+            return angle;
         }
        
     }
