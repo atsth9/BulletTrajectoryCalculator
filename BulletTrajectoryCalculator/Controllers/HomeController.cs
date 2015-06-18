@@ -19,10 +19,16 @@ namespace BulletTrajectoryCalculator.Controllers
         [HttpPost]
         public ActionResult Calculate(string InputSlantRange, string InputElevationAngle)
         {
+
+            double angle = GetAngleOfCorrection(InputSlantRange, InputElevationAngle);
+            //if angle returned a negative number, their input was not valid.
+            if (angle >= 0){
+                ViewBag.Title = "Your angle of correction is: " + angle + "'";
+                 return View();
+            }
+            else 
+                return View("IndexError");
             
-           
-            ViewBag.Title = "Your angle of correction is: " + GetAngleOfCorrection(InputSlantRange, InputElevationAngle) + "'";
-            return View();
         }
 
 
@@ -42,35 +48,45 @@ namespace BulletTrajectoryCalculator.Controllers
 
             //declare and initialize bulletdrop table
             double[,] BulletDropTable = new double[,] { { 0, 100, 200, 300, 400, 500 }, { 1.5, 0, -2.9, -11, -25.2, -46.4 } };
-
-            //parse the strings into numbers (and validate the data)
-            bool check1 = Double.TryParse(InputSlantRange, out SlantRange);
-            bool check2 = Double.TryParse(InputElevationAngle, out ElevationAngle);
-            ViewBag.SlantRange = "Slant Range: " + SlantRange;
-            ViewBag.ElevationAngle = "Elevation Angle: " + ElevationAngle;
-
-            //calculate equivalent horizontal range 
-            double HorizontalRange = SlantRange * Math.Cos(ElevationAngle*.0174532925);
-            //TODO check if horizontal range is > 500
-
-            //calculate bullet drop using linear interpolation
-            //loop through the bulletdrop table to find which two values it lies between
-            for (int i = 0; i < 6; i++)
+            try
             {
-                if (BulletDropTable[0,i] > HorizontalRange)
+
+           
+                //parse the strings into numbers (and validate the data)
+                bool check1 = Double.TryParse(InputSlantRange, out SlantRange);
+                bool check2 = Double.TryParse(InputElevationAngle, out ElevationAngle);
+                ViewBag.SlantRange = "Slant Range: " + SlantRange;
+                ViewBag.ElevationAngle = "Elevation Angle: " + ElevationAngle;
+
+                //calculate equivalent horizontal range 
+                double HorizontalRange = SlantRange * Math.Cos(ElevationAngle*.0174532925);
+                //TODO check if horizontal range is > 500
+
+                //calculate bullet drop using linear interpolation
+                //loop through the bulletdrop table to find which two values it lies between
+                for (int i = 0; i < 6; i++)
                 {
-                    MaxRangeIndex = i;
-                    break;
+                    if (BulletDropTable[0,i] > HorizontalRange)
+                    {
+                        MaxRangeIndex = i;
+                        break;
+                    }
                 }
+            
+                //pull the correct values from BulletDropTable and store them into easy to read variables
+                HighRange = BulletDropTable[0,MaxRangeIndex];
+                LowRange  = BulletDropTable[0,MaxRangeIndex - 1];
+                HighElevation  = BulletDropTable[1,MaxRangeIndex];
+                LowElevation = BulletDropTable[1,MaxRangeIndex - 1];
+                //use equation to calculate bullet drop correction in Minutes
+                BulletDrop = (HighElevation*(HorizontalRange - LowRange) + LowElevation*(HighRange - HorizontalRange))/(HighRange-LowRange);
+                angle = Math.Round(((-((BulletDrop * .01) / HorizontalRange) * (180 / Math.PI)) * 60), 1); 
             }
-            //pull the correct values from BulletDropTable and store them into easy to read variables
-            HighRange = BulletDropTable[0,MaxRangeIndex];
-            LowRange  = BulletDropTable[0,MaxRangeIndex - 1];
-            HighElevation  = BulletDropTable[1,MaxRangeIndex];
-            LowElevation = BulletDropTable[1,MaxRangeIndex - 1];
-            //use equation to calculate bullet drop correction in Minutes
-            BulletDrop = (HighElevation*(HorizontalRange - LowRange) + LowElevation*(HighRange - HorizontalRange))/(HighRange-LowRange);
-            angle = Math.Round(((-((BulletDrop * .01) / HorizontalRange) * (180 / Math.PI)) * 60), 1);
+            catch (Exception e)
+            {
+                //return a negative angle to show the input was invalid
+                return -1;
+            }
             return angle;
         }
        

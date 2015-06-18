@@ -1,0 +1,25 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+@using (Html.BeginForm("Calculate", "Home"))
+{
+    <fieldset>
+        <legend>Data Collection</legend>
+        <ol>
+            <li>
+                @Html.Label("Please enter the slant range:")
+                @Html.TextBox("InputSlantRange")
+            </li>
+            <li>
+                @Html.Label("Please enter the elevation angle:")
+                @Html.TextBox("InputElevationAngle")
+            </li>
+
+        </ol>
+        <input type="submit" value="Calculate" />
+        <div>Input was invalid. Please try again.</div>
+    </fieldset>
+
+
+
+}
